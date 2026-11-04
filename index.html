@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111111">
+  <title>Audio Tuner — Studio</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Audio Tuner home">
+        <span class="brand-mark" aria-hidden="true">AT</span>
+        <span class="brand-name">audio tuner</span>
+      </a>
+
+      <button class="sidebar-link active" id="studioNav" type="button">
+        <span class="nav-icon" aria-hidden="true">▤</span>
+        Studio setup
+      </button>
+      <div class="sidebar-section">
+        <div class="sidebar-section-heading">
+          <span>Library</span>
+          <span class="library-count" id="libraryCount">0</span>
+        </div>
+        <div class="library-list" id="sidebarLibrary">
+          <p class="sidebar-empty">Your edited tracks will appear here.</p>
+        </div>
+      </div>
+
+      <button class="sidebar-upload" id="sidebarUpload" type="button">
+        <span aria-hidden="true">＋</span> Import track
+      </button>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <span>Private local workspace</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="topbar">
+        <span class="breadcrumb">AUDIO TUNER <span>/</span> WORKSPACE</span>
+        <span class="local-badge"><span class="status-dot"></span> LOCAL SESSION</span>
+      </div>
+
+      <section class="page-view" id="studioView">
+        <header class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h1>Studio setup</h1>
+            <p class="page-subtitle">Separate, tune, and mix your tracks.</p>
+          </div>
+          <div class="meta-badges" id="metaBadges" hidden>
+            <span class="badge" id="bpmBadge">BPM <strong>--</strong></span>
+            <span class="badge" id="keyBadge">KEY <strong>--</strong></span>
+          </div>
+        </header>
+
+        <div class="notice" id="errorNotice" role="alert" hidden></div>
+
+        <section class="upload-card" id="dropArea" aria-label="Import an audio track">
+          <div class="upload-icon" aria-hidden="true">↥</div>
+          <h2>Bring your track into the studio</h2>
+          <p>Drop an audio or video file here, or browse your device.</p>
+          <button class="button button-light" id="browseButton" type="button">Choose a file</button>
+          <span class="file-hint">Audio and video files · Stored in your local library</span>
+        </section>
+
+        <section class="progress-card" id="progressCard" hidden aria-live="polite">
+          <div class="progress-heading">
+            <div>
+              <p class="eyebrow">PROCESSING TRACK</p>
+              <h2 id="progressStage">Preparing your audio…</h2>
+            </div>
+            <span class="progress-number" id="progressNumber">0%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <p class="muted-copy">Stem separation and analysis can take a few minutes.</p>
+        </section>
+
+        <section class="workspace" id="workspace" hidden>
+          <div class="track-heading">
+            <div class="track-heading-copy">
+              <p class="eyebrow">CURRENT PROJECT</p>
+              <h2 id="projectTitle">No track selected</h2>
+            </div>
+            <span class="save-state" id="saveState"><span class="status-dot"></span> Changes save automatically</span>
+          </div>
+
+          <div class="studio-grid">
+            <section class="panel tracks-panel" aria-labelledby="tracksHeading">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">MIXER</p>
+                  <h3 id="tracksHeading">Separated tracks</h3>
+                </div>
+                <span class="track-count" id="trackCount">0 tracks</span>
+              </div>
+              <div class="track-rack" id="trackRack"></div>
+            </section>
+
+            <aside class="panel lyrics-panel" aria-labelledby="lyricsHeading">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">TRANSCRIPTION</p>
+                  <h3 id="lyricsHeading">Lyrics</h3>
+                </div>
+              </div>
+              <div class="lyrics-content" id="lyricsContent">
+                <p class="empty-copy">Synced lyrics will appear here when vocals are detected.</p>
+              </div>
+            </aside>
+          </div>
+
+          <section class="transport-dock" id="transportDock" aria-label="Playback and export controls">
+            <div class="transport-playback">
+              <button class="play-button" id="btnPlayPause" type="button" disabled aria-label="Play">▶</button>
+              <div class="transport-track-info">
+                <strong id="transportTitle">Ready to mix</strong>
+                <span>Studio playback</span>
+              </div>
+            </div>
+            <div class="transport-settings">
+              <label class="setting-control">
+                <span>Pitch</span>
+                <input type="number" id="semitoneShift" value="0" step="1" min="-12" max="12" disabled>
+                <span class="setting-unit">st</span>
+              </label>
+              <label class="setting-control">
+                <span>Speed</span>
+                <input type="number" id="speedMultiplier" value="1" step="0.05" min="0.5" max="2" disabled>
+                <span class="setting-unit">×</span>
+              </label>
+            </div>
+            <button class="button button-light export-button" id="btnExport" type="button" disabled>
+              Export mix <span aria-hidden="true">↗</span>
+            </button>
+          </section>
+        </section>
+      </section>
+
+      <section class="page-view library-view" id="libraryView" hidden>
+        <header class="page-heading">
+          <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h1>Library</h1>
+            <p class="page-subtitle">Previously edited tracks, ready to pick up where you left off.</p>
+          </div>
+          <button class="button button-light" id="libraryImportButton" type="button">＋ Import track</button>
+        </header>
+        <div class="library-grid" id="libraryGrid"></div>
+      </section>
+
+      <footer class="main-footer">AUDIO TUNER <span>·</span> YOUR PROJECTS STAY ON THIS DEVICE</footer>
+    </main>
+  </div>
+
+  <input type="file" id="fileInput" accept="audio/*,video/*" hidden>
+
+  <script>
+    let taskId = null;
+    let project = null;
+    let audioContext = null;
+    let audioBuffers = {};
+    let audioSources = {};
+    let gainNodes = {};
+    let isPlaying = false;
+    let startTime = 0;
+    let pauseOffset = 0;
+    let saveTimer = null;
+    let lyricsData = [];
+
+    const fileInput = document.getElementById("fileInput");
+    const errorNotice = document.getElementById("errorNotice");
+    const stemNames = new Set(["vocals", "drums", "bass", "guitar", "piano", "other"]);
+    const API_BASE_URL = ["localhost", "127.0.0.1"].includes(location.hostname) && location.port !== "8000"
+      ? `${location.protocol}//${location.hostname}:8000`
+      : "";
+
+    function apiUrl(path) {
+      return new URL(path, API_BASE_URL || location.origin).toString();
+    }
+
+    async function api(url, options = {}) {
+      let response;
+      try {
+        response = await fetch(apiUrl(url), options);
+      } catch (error) {
+        const backend = API_BASE_URL || location.origin;
+        throw new Error(`Audio Tuner server is unreachable at ${backend}. Start the app server and open http://127.0.0.1:8000.`);
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.detail || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    function showError(message) {
+      errorNotice.textContent = message;
+      errorNotice.hidden = false;
+    }
+
+    function clearError() {
+      errorNotice.textContent = "";
+      errorNotice.hidden = true;
+    }
+
+    function chooseFile() {
+      fileInput.click();
+    }
+
+    document.getElementById("browseButton").addEventListener("click", chooseFile);
+    document.getElementById("sidebarUpload").addEventListener("click", chooseFile);
+    document.getElementById("libraryImportButton").addEventListener("click", chooseFile);
+
+    fileInput.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      clearError();
+      showPage("studio");
+      stopPlayback();
+      document.getElementById("workspace").hidden = true;
+      document.getElementById("dropArea").hidden = true;
+      document.getElementById("progressCard").hidden = false;
+      document.getElementById("metaBadges").hidden = true;
+      document.getElementById("progressStage").textContent = `Uploading ${file.name}…`;
+      document.getElementById("progressFill").style.width = "0%";
+      document.getElementById("progressNumber").textContent = "0%";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploaded = await api("/api/upload", { method: "POST", body: formData });
+        taskId = uploaded.task_id;
+        connectWebSocket(taskId);
+      } catch (error) {
+        resetUpload();
+        showError(error.message);
+      } finally {
+        fileInput.value = "";
+      }
+    });
+
+    const dropArea = document.getElementById("dropArea");
+    dropArea.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropArea.classList.add("dragging");
+    });
+    dropArea.addEventListener("dragleave", () => dropArea.classList.remove("dragging"));
+    dropArea.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropArea.classList.remove("dragging");
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    function connectWebSocket(id) {
+      const backend = new URL(API_BASE_URL || location.origin);
+      const protocol = backend.protocol === "https:" ? "wss:" : "ws:";
+      const socket = new WebSocket(`${protocol}//${backend.host}/ws/progress/${encodeURIComponent(id)}`);
+      socket.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
+        if (message.state === "PROGRESS") {
+          const progress = Math.max(0, Math.min(100, Number(message.progress) || 0));
+          document.getElementById("progressStage").textContent = message.stage || "Processing audio…";
+          document.getElementById("progressFill").style.width = `${progress}%`;
+          document.getElementById("progressNumber").textContent = `${Math.round(progress)}%`;
+        } else if (message.state === "SUCCESS") {
+          socket.close();
+          try {
+            await loadProject(id);
+            await refreshLibrary();
+          } catch (error) {
+            resetUpload();
+            showError(error.message);
+          }
+        } else if (message.state === "FAILURE") {
+          socket.close();
+          resetUpload();
+          showError(`Track processing failed: ${message.error || "Unknown error"}`);
+        }
+      };
+      socket.onerror = () => {
+        socket.close();
+        resetUpload();
+        showError(`Could not connect to the Audio Tuner API at ${API_BASE_URL || location.origin}. Start the app server, Celery worker, and Redis.`);
+      };
+    }
+
+    function resetUpload() {
+      document.getElementById("progressCard").hidden = true;
+      document.getElementById("dropArea").hidden = false;
+    }
+
+    async function loadProject(id) {
+      clearError();
+      showPage("studio");
+      stopPlayback();
+      const savedProject = await api(`/api/projects/${encodeURIComponent(id)}`);
+      project = savedProject;
+      taskId = savedProject.task_id;
+      lyricsData = Array.isArray(savedProject.lyrics) ? savedProject.lyrics : [];
+      document.getElementById("projectTitle").textContent = savedProject.title || "Untitled track";
+      document.getElementById("transportTitle").textContent = savedProject.title || "Untitled track";
+      document.getElementById("metaBadges").hidden = false;
+      document.getElementById("bpmBadge").innerHTML = `BPM <strong>${Number(savedProject.metadata?.bpm || 0).toFixed(2)}</strong>`;
+      document.getElementById("keyBadge").innerHTML = `KEY <strong>${escapeHtml(savedProject.metadata?.key || "Unknown")}</strong>`;
+      document.getElementById("progressCard").hidden = true;
+      document.getElementById("dropArea").hidden = true;
+      document.getElementById("workspace").hidden = false;
+      document.getElementById("semitoneShift").value = savedProject.semitones ?? 0;
+      document.getElementById("speedMultiplier").value = savedProject.speed ?? 1;
+      document.getElementById("semitoneShift").disabled = false;
+      document.getElementById("speedMultiplier").disabled = false;
+      document.getElementById("btnExport").disabled = false;
+
+      if (!audioContext || audioContext.state === "closed") {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      audioBuffers = {};
+      audioSources = {};
+      gainNodes = {};
+      pauseOffset = 0;
+
+      const rack = document.getElementById("trackRack");
+      rack.replaceChildren();
+      const stems = (savedProject.stems || []).filter((stem) => stemNames.has(stem));
+      document.getElementById("trackCount").textContent = `${stems.length} ${stems.length === 1 ? "track" : "tracks"}`;
+
+      for (const stem of stems) {
+        const row = document.createElement("div");
+        row.className = "track-channel";
+        const title = document.createElement("span");
+        title.className = "track-title";
+        title.textContent = stem;
+
+        const mute = document.createElement("button");
+        mute.className = "mute-button";
+        mute.type = "button";
+        mute.textContent = "Mute";
+        mute.setAttribute("aria-label", `Mute ${stem}`);
+
+        const slider = document.createElement("input");
+        slider.className = "volume-slider";
+        slider.type = "range";
+        slider.min = "0";
+        slider.max = "1";
+        slider.step = "0.01";
+        slider.value = String(savedProject.volumes?.[stem] ?? 1);
+        slider.setAttribute("aria-label", `${stem} volume`);
+
+        const value = document.createElement("span");
+        value.className = "volume-value";
+        value.textContent = `${Math.round(Number(slider.value) * 100)}%`;
+        const controls = document.createElement("div");
+        controls.className = "track-controls";
+        controls.append(mute, slider, value);
+        row.append(title, controls);
+        rack.appendChild(row);
+
+        const response = await fetch(apiUrl(`/api/stems/${encodeURIComponent(taskId)}/${encodeURIComponent(stem)}`));
+        if (!response.ok) throw new Error(`Could not load the ${stem} track.`);
+        audioBuffers[stem] = await audioContext.decodeAudioData(await response.arrayBuffer());
+        const gain = audioContext.createGain();
+        gain.connect(audioContext.destination);
+        gainNodes[stem] = gain;
+
+        const isMuted = Boolean(savedProject.muted?.[stem]);
+        mute.classList.toggle("active", isMuted);
+        mute.setAttribute("aria-pressed", String(isMuted));
+        gain.gain.value = isMuted ? 0 : Number(slider.value);
+        slider.addEventListener("input", () => {
+          value.textContent = `${Math.round(Number(slider.value) * 100)}%`;
+          if (!mute.classList.contains("active")) gain.gain.setTargetAtTime(Number(slider.value), audioContext.currentTime, 0.015);
+          scheduleSave();
+        });
+        mute.addEventListener("click", () => {
+          const muted = mute.classList.toggle("active");
+          mute.setAttribute("aria-pressed", String(muted));
+          gain.gain.setTargetAtTime(muted ? 0 : Number(slider.value), audioContext.currentTime, 0.015);
+          scheduleSave();
+        });
+      }
+
+      document.getElementById("btnPlayPause").disabled = stems.length === 0;
+      document.getElementById("btnExport").disabled = stems.length === 0;
+      renderLyrics();
+      bindMixSettings();
+      showPage("studio");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    function renderLyrics() {
+      const panel = document.getElementById("lyricsContent");
+      panel.replaceChildren();
+      if (!lyricsData.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty-copy";
+        empty.textContent = "No lyrics were detected for this track.";
+        panel.appendChild(empty);
+        return;
+      }
+      lyricsData.forEach((lyric, index) => {
+        const line = document.createElement("p");
+        line.className = "lyric-line";
+        line.id = `lyric_${index}`;
+        line.textContent = lyric.text || "";
+        panel.appendChild(line);
+      });
+    }
+
+    function currentSettings() {
+      const volumes = {};
+      const muted = {};
+      for (const stem of Object.keys(gainNodes)) {
+        const slider = document.querySelector(`[aria-label="${stem} volume"]`);
+        const mute = document.querySelector(`[aria-label="Mute ${stem}"]`);
+        volumes[stem] = Number(slider.value);
+        muted[stem] = mute.classList.contains("active");
+      }
+      return {
+        volumes,
+        muted,
+        semitones: Number(document.getElementById("semitoneShift").value),
+        speed: Number(document.getElementById("speedMultiplier").value)
+      };
+    }
+
+    function scheduleSave() {
+      if (!taskId) return;
+      clearTimeout(saveTimer);
+      const projectId = taskId;
+      const settings = currentSettings();
+      document.getElementById("saveState").innerHTML = '<span class="status-dot"></span> Saving changes…';
+      saveTimer = setTimeout(async () => {
+        try {
+          await api(`/api/projects/${encodeURIComponent(projectId)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settings)
+          });
+          document.getElementById("saveState").innerHTML = '<span class="status-dot"></span> Changes saved';
+          await refreshLibrary();
+        } catch (error) {
+          showError(`Could not save your mix: ${error.message}`);
+          document.getElementById("saveState").textContent = "Save failed";
+        }
+      }, 450);
+    }
+
+    function bindMixSettings() {
+      for (const id of ["semitoneShift", "speedMultiplier"]) {
+        const input = document.getElementById(id);
+        input.onchange = () => {
+          const min = Number(input.min);
+          const max = Number(input.max);
+          input.value = String(Math.max(min, Math.min(max, Number(input.value) || 0)));
+          if (isPlaying) updatePlaybackRate();
+          scheduleSave();
+        };
+      }
+    }
+
+    async function refreshLibrary() {
+      try {
+        const projects = await api("/api/library");
+        renderLibrary(projects);
+      } catch (error) {
+        showError(`Could not load the library: ${error.message}`);
+      }
+    }
+
+    function renderLibrary(projects) {
+      document.getElementById("libraryCount").textContent = String(projects.length);
+      const sidebar = document.getElementById("sidebarLibrary");
+      sidebar.replaceChildren();
+      const grid = document.getElementById("libraryGrid");
+      grid.replaceChildren();
+
+      if (!projects.length) {
+        const emptySidebar = document.createElement("p");
+        emptySidebar.className = "sidebar-empty";
+        emptySidebar.textContent = "Your edited tracks will appear here.";
+        sidebar.appendChild(emptySidebar);
+        const emptyGrid = document.createElement("div");
+        emptyGrid.className = "library-empty panel";
+        emptyGrid.innerHTML = '<span class="empty-symbol">♫</span><h2>Your library is empty</h2><p>Import a track to create your first studio project.</p><button class="button button-light" type="button">Import a track</button>';
+        emptyGrid.querySelector("button").addEventListener("click", chooseFile);
+        grid.appendChild(emptyGrid);
+        return;
+      }
+
+      projects.forEach((item) => {
+        const button = document.createElement("button");
+        button.className = `library-item${item.task_id === taskId ? " selected" : ""}`;
+        button.type = "button";
+        const name = document.createElement("span");
+        name.className = "library-item-name";
+        name.textContent = item.title || "Untitled track";
+        const detail = document.createElement("span");
+        detail.className = "library-item-meta";
+        detail.textContent = item.metadata?.key || "Processed track";
+        button.append(name, detail);
+        button.addEventListener("click", () => loadProject(item.task_id).catch((error) => showError(error.message)));
+        sidebar.appendChild(button);
+
+        const card = document.createElement("button");
+        card.className = "library-card panel";
+        card.type = "button";
+        const icon = document.createElement("span");
+        icon.className = "library-card-icon";
+        icon.textContent = "♫";
+        const title = document.createElement("strong");
+        title.textContent = item.title || "Untitled track";
+        const info = document.createElement("span");
+        const bpm = Number(item.metadata?.bpm || 0);
+        info.textContent = `${item.metadata?.key || "Key unknown"} · ${bpm ? `${bpm.toFixed(0)} BPM` : "Tempo unknown"}`;
+        const edited = document.createElement("span");
+        edited.className = "library-card-date";
+        edited.textContent = item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "Recently edited";
+        card.append(icon, title, info, edited);
+        card.addEventListener("click", () => loadProject(item.task_id).catch((error) => showError(error.message)));
+        grid.appendChild(card);
+      });
+    }
+
+    function showPage(page) {
+      const library = page === "library";
+      document.getElementById("studioView").hidden = library;
+      document.getElementById("libraryView").hidden = !library;
+      document.getElementById("studioNav").classList.toggle("active", !library);
+      document.getElementById("libraryNav")?.classList.toggle("active", library);
+    }
+
+    document.getElementById("studioNav").addEventListener("click", () => showPage("studio"));
+    const libraryNav = document.createElement("button");
+    libraryNav.className = "sidebar-link";
+    libraryNav.id = "libraryNav";
+    libraryNav.type = "button";
+    libraryNav.innerHTML = '<span class="nav-icon" aria-hidden="true">▦</span> All tracks';
+    document.querySelector(".sidebar").insertBefore(libraryNav, document.querySelector(".sidebar-section"));
+    libraryNav.addEventListener("click", () => showPage("library"));
+
+    document.getElementById("btnPlayPause").addEventListener("click", async () => {
+      if (isPlaying) pauseAudio();
+      else await playAudio();
+    });
+
+    function playbackRate() {
+      const speed = Number(document.getElementById("speedMultiplier").value) || 1;
+      const pitch = Number(document.getElementById("semitoneShift").value) || 0;
+      return speed * Math.pow(2, pitch / 12);
+    }
+
+    function updatePlaybackRate() {
+      for (const source of Object.values(audioSources)) source.playbackRate.setTargetAtTime(playbackRate(), audioContext.currentTime, 0.03);
+    }
+
+    async function playAudio() {
+      if (!audioContext || !Object.keys(audioBuffers).length) return;
+      if (audioContext.state === "suspended") await audioContext.resume();
+      const maxDuration = Math.max(...Object.values(audioBuffers).map((buffer) => buffer.duration));
+      if (pauseOffset >= maxDuration) pauseOffset = 0;
+      startTime = audioContext.currentTime;
+      const rate = playbackRate();
+      let ended = 0;
+      const sourceCount = Object.keys(audioBuffers).length;
+      for (const [stem, buffer] of Object.entries(audioBuffers)) {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.playbackRate.value = rate;
+        source.connect(gainNodes[stem]);
+        source.onended = () => {
+          ended += 1;
+          if (isPlaying && ended === sourceCount) {
+            isPlaying = false;
+            pauseOffset = 0;
+            document.getElementById("btnPlayPause").textContent = "▶";
+            document.getElementById("btnPlayPause").setAttribute("aria-label", "Play");
+          }
+        };
+        source.start(0, Math.min(pauseOffset, buffer.duration));
+        audioSources[stem] = source;
+      }
+      isPlaying = true;
+      document.getElementById("btnPlayPause").textContent = "Ⅱ";
+      document.getElementById("btnPlayPause").setAttribute("aria-label", "Pause");
+      requestAnimationFrame(syncUI);
+    }
+
+    function pauseAudio() {
+      if (!isPlaying) return;
+      pauseOffset += (audioContext.currentTime - startTime) * playbackRate();
+      isPlaying = false;
+      for (const source of Object.values(audioSources)) source.stop();
+      audioSources = {};
+      document.getElementById("btnPlayPause").textContent = "▶";
+      document.getElementById("btnPlayPause").setAttribute("aria-label", "Play");
+    }
+
+    function stopPlayback() {
+      if (isPlaying) pauseAudio();
+      isPlaying = false;
+      pauseOffset = 0;
+      for (const source of Object.values(audioSources)) {
+        try { source.stop(); } catch (_) { /* Source may already have ended. */ }
+      }
+      audioSources = {};
+      const button = document.getElementById("btnPlayPause");
+      if (button) {
+        button.textContent = "▶";
+        button.setAttribute("aria-label", "Play");
+      }
+    }
+
+    function syncUI() {
+      if (!isPlaying) return;
+      const current = pauseOffset + (audioContext.currentTime - startTime) * playbackRate();
+      lyricsData.forEach((lyric, index) => {
+        const element = document.getElementById(`lyric_${index}`);
+        if (element) element.classList.toggle("active", current >= lyric.start && current <= lyric.end);
+      });
+      requestAnimationFrame(syncUI);
+    }
+
+    document.getElementById("btnExport").addEventListener("click", async () => {
+      if (!taskId) return;
+      const button = document.getElementById("btnExport");
+      button.disabled = true;
+      button.textContent = "Rendering mix…";
+      try {
+        const settings = currentSettings();
+        await api(`/api/projects/${encodeURIComponent(taskId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(settings)
+        });
+        const volumes = {};
+        for (const stem of Object.keys(settings.volumes)) {
+          volumes[stem] = settings.muted[stem] ? 0 : settings.volumes[stem];
+        }
+        const result = await api("/api/export", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            task_id: taskId,
+            volumes,
+            semitones: settings.semitones,
+            speed: settings.speed
+          })
+        });
+        window.location.assign(apiUrl(result.download_url));
+          await refreshLibrary();
+      } catch (error) {
+        showError(`Could not export the mix: ${error.message}`);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = 'Export mix <span aria-hidden="true">↗</span>';
+      }
+    });
+
+    refreshLibrary();
+  </script>
+</body>
+</html>

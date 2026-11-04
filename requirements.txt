@@ -1,0 +1,11 @@
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+celery[redis]>=5.4,<5.5
+kombu>=5.3.4,<5.4
+redis>=5.2,<6
+numpy>=1.26
+librosa>=0.10
+torch>=2.2
+demucs>=4.0
+faster-whisper>=1.0
