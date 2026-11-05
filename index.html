@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111111">
   <title>Audio Tuner — Studio</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="Audio Tuner home">
+      <a class="brand" href="./" aria-label="Audio Tuner home">
         <span class="brand-mark" aria-hidden="true">AT</span>
         <span class="brand-name">audio tuner</span>
       </a>
@@ -190,11 +190,12 @@
         const backend = API_BASE_URL || location.origin;
         throw new Error(`Audio Tuner server is unreachable at ${backend}. Start the app server and open http://127.0.0.1:8000.`);
       }
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.detail || `Request failed (${response.status})`);
-      }
-      return data;
+      const PROD_BACKEND_URL = "https://your-audio-backend.up.railway.app"; 
+
+const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
+const API_BASE_URL = isLocalhost
+  ? (location.port !== "8000" ? `${location.protocol}//${location.hostname}:8000` : "")
+  : PROD_BACKEND_URL;
     }
 
     function showError(message) {
